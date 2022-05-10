@@ -59,6 +59,12 @@ const maxUint64 = 1<<64 - 1
 // ParseUint is like ParseInt but for unsigned numbers.
 //
 // A sign prefix is not permitted.
+// ParseInt 将字符串转换为 int 类型
+// s：要转换的字符串
+// base：进位制（2 进制到 36 进制）
+// bitSize：指定整数类型（0:int、8:int8、16:int16、32:int32、64:int64）
+// 返回转换后的结果和转换时遇到的错误
+// 如果 base 为 0，则根据字符串的前缀判断进位制（0x:16，0:8，其它:10）
 func ParseUint(s string, base int, bitSize int) (uint64, error) {
 	const fnParseUint = "ParseUint"
 
@@ -75,9 +81,11 @@ func ParseUint(s string, base int, bitSize int) (uint64, error) {
 
 	case base == 0:
 		// Look for octal, hex prefix.
+		// 如果不是有效的进制，默认十进制
 		base = 10
 		if s[0] == '0' {
 			switch {
+			// 判断是否是其他进制
 			case len(s) >= 3 && lower(s[1]) == 'b':
 				base = 2
 				s = s[2:]
@@ -114,7 +122,7 @@ func ParseUint(s string, base int, bitSize int) (uint64, error) {
 	default:
 		cutoff = maxUint64/uint64(base) + 1
 	}
-
+	// 最大值
 	maxVal := uint64(1)<<uint(bitSize) - 1
 
 	underscores := false
@@ -194,7 +202,7 @@ func ParseInt(s string, base int, bitSize int) (i int64, err error) {
 	if s[0] == '+' {
 		s = s[1:]
 	} else if s[0] == '-' {
-		neg = true
+		neg = true // 是否为负数
 		s = s[1:]
 	}
 
@@ -235,6 +243,7 @@ func Atoi(s string) (int, error) {
 		// Fast path for small integers that fit int type.
 		s0 := s
 		if s[0] == '-' || s[0] == '+' {
+			// 去除符号
 			s = s[1:]
 			if len(s) < 1 {
 				return 0, &NumError{fnAtoi, s0, ErrSyntax}
@@ -243,7 +252,7 @@ func Atoi(s string) (int, error) {
 
 		n := 0
 		for _, ch := range []byte(s) {
-			ch -= '0'
+			ch -= '0' // 计算数字大小，大于9表示是非数字。
 			if ch > 9 {
 				return 0, &NumError{fnAtoi, s0, ErrSyntax}
 			}
